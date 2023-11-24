@@ -13,13 +13,13 @@ router.get('/users', authMiddleware, customErrorHandler, async (req, res) => {
 	res.json(users);
 });
 
-router.post('/users', async (req, res) => {
+router.post('/users', customErrorHandler, async (req, res) => {
 	const { nome, email, senha, telefones } = req.body;
 	const user = await userService.createUser({ nome, email, senha, telefones });
 	res.json(user);
 });
 
-router.post('/users/signin', async (req, res) => {
+router.post('/users/signin', customErrorHandler, async (req, res) => {
 	const { email, senha } = req.body;
 
 	const user = await userService.signIn({ email, senha });

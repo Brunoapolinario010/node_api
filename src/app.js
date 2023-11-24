@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const userRoutes = require('./routes/user.routes');
 
 dotenv.config();
 
@@ -15,7 +16,8 @@ process.on('unhandledRejection', (reason, promise) => {
 	console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-app.use('/api', require('./routes/user.routes'));
+
+app.use('/api', userRoutes);
 
 app.listen(PORT, () => {
 	console.log(`Server is listening on port ${PORT}`);

@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const CustomError = require('../utils/customError');
-
+const { default: isEmail } = require('validator/lib/isEmail');
 class UserService {
 	constructor(sequelize) {
 		Models(sequelize);
@@ -18,16 +18,21 @@ class UserService {
 	async createUser({ nome, email, senha, telefones }) {
 		const id = crypto.randomUUID();
 		const hashedPassword = await bcrypt.hash(senha, parseInt(process.env.SALT_ROUNDS));
+
+		if(!isEmail(email)) {
+			return new CustomError(400, 'E-mail inválido');
+		}
+
 		const user = await this.models.users.findOne({ where: { email } });
 
 		if (user) {
-			return { mensagem: 'E-mail já existente' };
+			return new CustomError(409, 'E-mail já existente');
 		}
 
 		const result = await this.models.users.create({ id, nome, email, senha: hashedPassword, telefones });
 
 		if (!result) {
-			return { mensagem: 'Erro ao criar usuário' };
+			return new CustomError(500, 'Erro ao criar usuário');
 		}
 
 		const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30m' });
@@ -39,13 +44,13 @@ class UserService {
 		const user = await this.models.users.findOne({ where: { email } });
 
 		if (!user) {
-			return { mensagem: 'Usuário e/ou senha inválidos' };
+			return new CustomError(404, 'Usuário e/ou senha inválidos');
 		}
 
 		const match = await bcrypt.compare(senha, user.senha);
 
 		if (!match) {
-			return { mensagem: 'Usuário e/ou senha inválidos' };
+			return new CustomError(404, 'Usuário e/ou senha inválidos');
 		}
 
 		const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30m' });
@@ -59,7 +64,7 @@ class UserService {
 		const user = await this.models.users.findOne({ where: { id } });
 
 		if (!user) {
-			throw new CustomError(404, 'Usuário não encontrado');
+			return new CustomError(404, 'Usuário não encontrado');
 		}
 
 		return user;
