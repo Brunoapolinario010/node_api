@@ -38,5 +38,5 @@ module.exports = (sequelize) => {
 		},
 	});
 
-	sequelize.sync({ force: true });
+	sequelize.sync({ force: false });
 };
