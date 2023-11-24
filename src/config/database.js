@@ -3,26 +3,28 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const sequelize = new Sequelize({
-	dialect: 'postgres',
-	host: process.env.DB_HOST,
-	port: parseInt(process.env.DB_PORT),
-	database: process.env.DB_NAME,
-	username: process.env.DB_USERNAME,
-	password: process.env.DB_PASSWORD,
-	pool: {
-		max: 3,
-		min: 1,
-		idle: 10000
-	},
-});
+if(!process.env.DB_URL) {
+	console.error('DB_URL environment variable not defined');
+	process.exit(1);
+}
 
-sequelize.authenticate().then(() => {
-	console.log('Connected to database');
-}).catch((err) => {
-	console.error('Error connecting to database' + err);
-});
+const connectionUri = process.env.DB_URL;
 
-console.log(sequelize.models);
+const sequelize = new Sequelize(
+	connectionUri,
+	{
+		pool: {
+			max: 3,
+			min: 1,
+			idle: 10000
+		},
+	});
+
+sequelize.authenticate()
+	.then(() => {
+		console.log('Connected to database');
+	}).catch((err) => {
+		console.error('Error connecting to database\n' + err);
+	});
 
 module.exports = sequelize;
