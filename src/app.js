@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.use('/api', require('./router/userRoutes'));
+app.use('/api', require('./routes/user.routes'));
 
 app.listen(PORT, () => {
 	console.log(`Server is listening on port ${PORT}`);
