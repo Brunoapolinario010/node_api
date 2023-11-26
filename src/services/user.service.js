@@ -5,70 +5,82 @@ const jwt = require('jsonwebtoken');
 const CustomError = require('../utils/customError');
 const { default: isEmail } = require('validator/lib/isEmail');
 class UserService {
-	constructor(sequelize) {
-		Models(sequelize);
-		this.client = sequelize;
-		this.models = sequelize.models;
-	}
+  constructor(sequelize) {
+    Models(sequelize);
+    this.client = sequelize;
+    this.models = sequelize.models;
+  }
 
-	async getAllUsers() {
-		return await this.models.users.findAll();
-	}
+  async getAllUsers() {
+    return await this.models.users.findAll();
+  }
 
-	async createUser({ nome, email, senha, telefones }) {
-		const id = crypto.randomUUID();
-		const hashedPassword = await bcrypt.hash(senha, parseInt(process.env.SALT_ROUNDS));
+  async createUser({ nome, email, senha, telefones }) {
+    const id = crypto.randomUUID();
+    const hashedPassword = await bcrypt.hash(senha, parseInt(process.env.SALT_ROUNDS));
 
-		if(!isEmail(email)) {
-			return new CustomError(400, 'E-mail inválido');
-		}
+    if (!isEmail(email)) {
+      return new CustomError(400, 'E-mail inválido');
+    }
 
-		const user = await this.models.users.findOne({ where: { email } });
+    const user = await this.models.users.findOne({ where: { email } });
 
-		if (user) {
-			return new CustomError(409, 'E-mail já existente');
-		}
+    if (user) {
+      return new CustomError(409, 'E-mail já existente');
+    }
 
-		const result = await this.models.users.create({ id, nome, email, senha: hashedPassword, telefones });
+    const result = await this.models.users.create({ id, nome, email, senha: hashedPassword, telefones });
 
-		if (!result) {
-			return new CustomError(500, 'Erro ao criar usuário');
-		}
+    if (!result) {
+      return new CustomError(500, 'Erro ao criar usuário');
+    }
 
-		const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+    const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30m' });
 
-		return { id: result.id, data_criacao: result.data_criacao, data_atualizacao: result.data_atualizacao, ultimo_login: result.ultimo_login, token };
-	}
+    return {
+      id: result.id,
+      data_criacao: result.data_criacao,
+      data_atualizacao: result.data_atualizacao,
+      ultimo_login: result.ultimo_login,
+      token,
+    };
+  }
 
-	async signIn({ email, senha }) {
-		const user = await this.models.users.findOne({ where: { email } });
+  async signIn({ email, senha }) {
+    const user = await this.models.users.findOne({ where: { email } });
 
-		if (!user) {
-			return new CustomError(404, 'Usuário e/ou senha inválidos');
-		}
+    if (!user) {
+      return new CustomError(404, 'Usuário e/ou senha inválidos');
+    }
 
-		const match = await bcrypt.compare(senha, user.senha);
+    const match = await bcrypt.compare(senha, user.senha);
 
-		if (!match) {
-			return new CustomError(404, 'Usuário e/ou senha inválidos');
-		}
+    if (!match) {
+      return new CustomError(404, 'Usuário e/ou senha inválidos');
+    }
 
-		const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30m' });
 
-		await this.models.users.update({ ultimo_login: new Date() }, { where: { id: user.id } });
+    await this.models.users.update({ ultimo_login: new Date() }, { where: { id: user.id } });
 
-		return { id: user.id, data_criacao: user.data_criacao, data_atualizacao: user.data_atualizacao, ultimo_login: user.ultimo_login, token };
-	}
+    return {
+      id: user.id,
+      data_criacao: user.data_criacao,
+      data_atualizacao: user.data_atualizacao,
+      ultimo_login: user.ultimo_login,
+      token,
+    };
+  }
 
-	async getUserById(id) {
-		const user = await this.models.users.findOne({ where: { id } });
+  async getUserById(id) {
+    const user = await this.models.users.findOne({ where: { id } });
 
-		if (!user) {
-			return new CustomError(404, 'Usuário não encontrado');
-		}
+    if (!user) {
+      return new CustomError(404, 'Usuário não encontrado');
+    }
 
-		return user;
-	}
+    return user;
+  }
 }
 
 module.exports = UserService;

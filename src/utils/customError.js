@@ -1,15 +1,15 @@
 class CustomError {
-	status;
-	mensagem;
+  status;
+  mensagem;
 
-	constructor(status, message) {
-		this.status = status;
-		this.mensagem = message;
-	}
+  constructor(status, message) {
+    this.status = status;
+    this.mensagem = message;
+  }
 
-	get Mensagem() {
-		return this.mensagem;
-	}
+  get Mensagem() {
+    return this.mensagem;
+  }
 }
 
 module.exports = CustomError;
